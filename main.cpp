@@ -9,7 +9,11 @@ struct Bar{
     int dateEnd;
     int monthStart;
     int monthEnd;
+    int absStart;
+    int absEnd;
+    int column;
 };
+
 const vector<string> Month = {"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"};
 
 void displayBars(vector<Bar> &mainBar, const vector<string> &month){
@@ -57,7 +61,22 @@ int calcBarLength(const Bar& bar){
         }
     }
     return sum;
-}
+}//calculate the length of a bar
+
+void calcAbsDate(const Bar& bar, int& absA, int& absB){
+    const vector<int> daylength = {0 , 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+    absA = 0;
+    absB = 0;
+
+    for(int i=0; i<bar.monthStart; i++){
+        absA += daylength[i];
+    }
+    absA += bar.dateStart;
+    for(int j=0; j<bar.monthEnd; j++){
+        absB += daylength[j];
+    }
+    absB += bar.dateEnd;
+}//returns the day in 365 days format
 
 void mainMenu(vector<Bar>& mainBar, const vector<string> &month){
     bool running = true;
@@ -69,6 +88,10 @@ void mainMenu(vector<Bar>& mainBar, const vector<string> &month){
             inputBar(mainBar);
         }else if(input == 2){
             displayBars(mainBar, month);
+            for(int i=0; i<mainBar.size(); i++){
+                int length = calcBarLength(mainBar[i]); // Pass the specific bar here
+                cout << mainBar[i].name << " length: " << length << " days\n";
+            }
         }else if(input == 3){
             cout << "quitting" << endl;
             running = false;
@@ -76,7 +99,7 @@ void mainMenu(vector<Bar>& mainBar, const vector<string> &month){
             cout << "invalid input\n";
         }
     }
-}
+}//current interface for prototyping
 
 int main(){
     vector<Bar> mainBar;
@@ -85,6 +108,21 @@ int main(){
 }
 
 
-//devlog: currently developing bar length calculator
-// to calculate how long a bar should be based on the date and month
-// it starts from to the date and month its gonna end
+//devlog: bar length done
+// next to be developed is column
+// if there are 2 or more schedules overlapping on the same
+// date or length, make a new column
+
+// next to develop too is fetching user's current date and month
+// translate them into data and process it, put the user's current
+// date and month in the table, thats it
+// if the date and month of an event exceeds its length
+// (klo event nya udah selesai kayak kemaren or etc)
+// the bar remains there until the next year's month starting to render.
+
+
+//in development reminder so i wont forget:
+// im developing the column calculator to see if 2 schedule overlap together on the
+// same date, need date converter to raw 365 day for cleaner later bool function.
+// bool checks if 2 dates or more are overlapping with each other by comparing each bar's
+// length
