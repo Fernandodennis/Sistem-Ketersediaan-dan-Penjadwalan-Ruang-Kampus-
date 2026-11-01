@@ -24,6 +24,28 @@ void displayBars(vector<Bar> &mainBar, const vector<string> &month){
     }
 }
 
+void calcAbsDate(const Bar& bar, int& absA, int& absB){
+    const vector<int> daylength = {0 , 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+    absA = 0;
+    absB = 0;
+
+    for(int i=0; i<bar.monthStart; i++){
+        absA += daylength[i];
+    }
+    absA += bar.dateStart;
+    for(int j=0; j<bar.monthEnd; j++){
+        absB += daylength[j];
+    }
+    absB += bar.dateEnd;
+    if(bar.monthEnd < bar.monthStart){
+        absB += 365;
+    }
+}//returns the day in 365 days format
+
+bool isOverlapping(const Bar& barA, const Bar& barB){
+    return(barA.absStart <= barB.absEnd && barA.absEnd >= barB.absStart);
+}
+
 void inputBar(vector<Bar>& mainBar){
     Bar userBar;
     cout << "insert bar name\n";
@@ -37,6 +59,19 @@ void inputBar(vector<Bar>& mainBar){
     cout << "insert monthEnd\n";
     cin >> userBar.monthEnd;
     cout << "all data inserted\n";
+
+    int start = 0;
+    int end = 0;
+    calcAbsDate(userBar, start, end);
+    userBar.absStart = start;
+    userBar.absEnd = end;
+    userBar.column = 0;
+
+    for(int i=0; i<mainBar.size(); i++){
+        if(mainBar[i].column == userBar.column && isOverlapping(mainBar[i], userBar)){
+            userBar.column++;
+        }
+    }
 
     mainBar.push_back(userBar);
 }
@@ -62,21 +97,6 @@ int calcBarLength(const Bar& bar){
     }
     return sum;
 }//calculate the length of a bar
-
-void calcAbsDate(const Bar& bar, int& absA, int& absB){
-    const vector<int> daylength = {0 , 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
-    absA = 0;
-    absB = 0;
-
-    for(int i=0; i<bar.monthStart; i++){
-        absA += daylength[i];
-    }
-    absA += bar.dateStart;
-    for(int j=0; j<bar.monthEnd; j++){
-        absB += daylength[j];
-    }
-    absB += bar.dateEnd;
-}//returns the day in 365 days format
 
 void mainMenu(vector<Bar>& mainBar, const vector<string> &month){
     bool running = true;
