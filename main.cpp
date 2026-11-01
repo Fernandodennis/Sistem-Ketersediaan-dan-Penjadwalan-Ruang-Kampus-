@@ -16,14 +16,6 @@ struct Bar{
 
 const vector<string> Month = {"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"};
 
-void displayBars(vector<Bar> &mainBar, const vector<string> &month){
-    for(int i = 0; i < mainBar.size(); i++){
-        cout << mainBar[i].name << "\n";
-        cout << mainBar[i].dateStart << " - " << mainBar[i].dateEnd << "\n";
-        cout << month[mainBar[i].monthStart - 1] << " - " << month[mainBar[i].monthEnd - 1] << "\n";
-    }
-}
-
 void calcAbsDate(const Bar& bar, int& absA, int& absB){
     const vector<int> daylength = {0 , 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
     absA = 0;
@@ -98,6 +90,18 @@ int calcBarLength(const Bar& bar){
     return sum;
 }//calculate the length of a bar
 
+void displayBars(vector<Bar> &mainBar, const vector<string> &month){
+    for(int i = 0; i < mainBar.size(); i++){
+         int length = calcBarLength(mainBar[i]);
+        cout << mainBar[i].name << "\n";
+        cout << mainBar[i].dateStart << " - " << mainBar[i].dateEnd << "\n";
+        cout << month[mainBar[i].monthStart - 1] << " - " << month[mainBar[i].monthEnd - 1] << "\n";
+        cout << "length: " << length << " days\n";
+        cout << "column: " << mainBar[i].column << "\n";
+        cout << "date in 365 format: " << mainBar[i].absStart << " - " << mainBar[i].absEnd << "\n";
+    }
+}
+
 void mainMenu(vector<Bar>& mainBar, const vector<string> &month){
     bool running = true;
     while(running){
@@ -108,10 +112,6 @@ void mainMenu(vector<Bar>& mainBar, const vector<string> &month){
             inputBar(mainBar);
         }else if(input == 2){
             displayBars(mainBar, month);
-            for(int i=0; i<mainBar.size(); i++){
-                int length = calcBarLength(mainBar[i]); // Pass the specific bar here
-                cout << mainBar[i].name << " length: " << length << " days\n";
-            }
         }else if(input == 3){
             cout << "quitting" << endl;
             running = false;
