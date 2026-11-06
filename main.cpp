@@ -100,7 +100,111 @@ struct NowInfo{
     int minute;
     int absDay;       // hari ke-berapa dalam 365 hari (format sama dengan absStart/absEnd)
 };
+const int DAYS_IN_MONTH[13] = {0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
 
+int readInt(const string& prompt, int minVal, int maxVal){
+    int value;
+    while(true){
+        cout << prompt;
+        if(cin >> value && value >= minVal && value <= maxVal){
+            cin.ignore(1000, '\n');
+            return value;
+        }
+        cin.clear();
+        cin.ignore(1000, '\n');
+        cout << "invalid input, enter " << minVal << " - " << maxVal << "\n";
+    }
+}
+
+int pickBar(const vector<Bar>& mainBar){
+    if(mainBar.empty()){
+        cout << "no schedule yet\n";
+        return -1;
+    }
+    for(int i = 0; i < (int)mainBar.size(); i++){
+        cout << i + 1 << ". " << mainBar[i].name << " ("
+             << mainBar[i].dateStart << "/" << mainBar[i].monthStart << " - "
+             << mainBar[i].dateEnd << "/" << mainBar[i].monthEnd << ")\n";
+    }
+    int choice = readInt("choose number (0 to cancel): ", 0, mainBar.size());
+    return choice - 1;
+}
+
+void readDate(const string& label, int& month, int& day){
+    month = readInt(label + " month (1-12): ", 1, 12);
+    day = readInt(label + " date (1-" + to_string(DAYS_IN_MONTH[month]) + "): ",
+                  1, DAYS_IN_MONTH[month]);
+}
+
+void recalcColumns(vector<Bar>& mainBar){
+    for(int i = 0; i < (int)mainBar.size(); i++){
+        mainBar[i].column = 0;
+        bool placed = false;
+        while(!placed){
+            placed = true;
+            for(int j = 0; j < i; j++){
+                if(mainBar[j].column == mainBar[i].column && isOverlapping(mainBar[j], mainBar[i])){
+                    mainBar[i].column++;
+                    placed = false;
+                    break;
+                }
+            }
+        }
+    }
+}
+
+void deleteBar(vector<Bar>& mainBar){
+    int idx = pickBar(mainBar);
+    if(idx < 0) return;
+
+    cout << "delete \"" << mainBar[idx].name << "\"?\n";
+    int confirm = readInt("1 = yes, 0 = no: ", 0, 1);
+    if(confirm == 1){
+        mainBar.erase(mainBar.begin() + idx);
+        recalcColumns(mainBar);
+        cout << "schedule deleted\n";
+    }else{
+        cout << "cancelled\n";
+    }
+}
+
+void editBar(vector<Bar>& mainBar){
+    int idx = pickBar(mainBar);
+    if(idx < 0) return;
+
+    Bar temp = mainBar[idx];
+
+    bool editing = true;
+    while(editing){
+        cout << "\nediting: " << temp.name << "\n";
+        cout << "1. name\n2. start date\n3. end date\n0. save and finish\n";
+        int field = readInt("choose: ", 0, 3);
+
+        if(field == 1){
+            cout << "new name: ";
+            getline(cin, temp.name);
+        }else if(field == 2){
+            readDate("start", temp.monthStart, temp.dateStart);
+        }else if(field == 3){
+            readDate("end", temp.monthEnd, temp.dateEnd);
+        }else{
+            editing = false;
+        }
+    }
+
+    int a, b;
+    calcAbsDate(temp, a, b);
+    if(b < a){
+        cout << "end date is before start date, changes discarded\n";
+        return;
+    }
+    temp.absStart = a;
+    temp.absEnd = b;
+
+    mainBar[idx] = temp;
+    recalcColumns(mainBar);
+    cout << "schedule updated\n";
+}
 NowInfo getCurrentTime(){
     const vector<int> daylength = {0 , 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
     time_t raw = time(nullptr) + 7 * 3600;   // paksa WIB (UTC+7), server bisa pakai UTC
@@ -137,7 +241,7 @@ void showCurrentTime(){
 void mainMenu(vector<Bar>& mainBar, const vector<string> &month){
     bool running = true;
     while(running){
-        cout << "what u wanna do? 1 to insert bars, 2 to display em, 3 to quit" << endl;
+        cout << "what u wanna do? 1 insert, 2 display, 3 edit, 4 delete, 5 quit" << endl;
         int input;
         cin >> input;
         if (input == 1){
@@ -145,6 +249,10 @@ void mainMenu(vector<Bar>& mainBar, const vector<string> &month){
         }else if(input == 2){
             displayBars(mainBar, month);
         }else if(input == 3){
+          editBar(mainBar);
+        }else if(input == 4){
+          deleteBar(mainBar);
+        }else if(input == 5){
             cout << "quitting" << endl;
             running = false;
         }else{
@@ -159,3 +267,5 @@ int main(){
     mainMenu(mainBar, Month);
     return 0;
 }
+
+
