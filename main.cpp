@@ -1,17 +1,19 @@
 #include <iostream>
+#include <string>
 #include <vector>
+#include <ctime>
 
 using namespace std;
 
 struct Bar{
     string name;
-    int dateStart;
-    int dateEnd;
-    int monthStart;
-    int monthEnd;
-    int absStart;
-    int absEnd;
-    int column;
+    int dateStart = 0;
+    int dateEnd = 0;
+    int monthStart = 0;
+    int monthEnd = 0;
+    int absStart = 0;
+    int absEnd = 0;
+    int column = 0;
 };
 
 const vector<string> Month = {"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"};
@@ -21,11 +23,11 @@ void calcAbsDate(const Bar& bar, int& absA, int& absB){
     absA = 0;
     absB = 0;
 
-    for(int i=0; i<bar.monthStart; i++){
+    for(int i = 0; i < bar.monthStart; i++){
         absA += daylength[i];
     }
     absA += bar.dateStart;
-    for(int j=0; j<bar.monthEnd; j++){
+    for(int j = 0; j < bar.monthEnd; j++){
         absB += daylength[j];
     }
     absB += bar.dateEnd;
@@ -59,53 +61,83 @@ void inputBar(vector<Bar>& mainBar){
     userBar.absEnd = end;
     userBar.column = 0;
 
-    for(int i=0; i<mainBar.size(); i++){
-        if(mainBar[i].column == userBar.column && isOverlapping(mainBar[i], userBar)){
-            userBar.column++;
+    // cari column terkecil yang tidak bentrok dengan bar lain
+    bool columnTaken = true;
+    while(columnTaken){
+        columnTaken = false;
+        for(size_t i = 0; i < mainBar.size(); i++){
+            if(mainBar[i].column == userBar.column && isOverlapping(mainBar[i], userBar)){
+                userBar.column++;
+                columnTaken = true;
+                break;   // cek ulang dari awal dengan column yang baru
+            }
         }
     }
 
     mainBar.push_back(userBar);
 }
-//testcases
-//input format sdate,ndate,smonth,nmonth
-//input: 1, 28, 10, 12
-int calcBarLength(const Bar& bar){
-    const vector<int> daylength = {0 , 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
-    int sum;
-    int currDay = bar.dateStart;
-    int currMonth = bar.monthStart;
-
-    while(currDay != bar.dateEnd || currMonth != bar.monthEnd){
-        sum++;
-        currDay++;
-        if (currDay > daylength[currMonth]){
-            currDay = 1;
-            currMonth++;
-            if(currMonth > 12){
-                currMonth = 1;
-            }
-        }
-    }
-    return sum;
-}//calculate the length of a bar
 
 void displayBars(vector<Bar> &mainBar, const vector<string> &month){
-    for(int i = 0; i < mainBar.size(); i++){
-         int length = calcBarLength(mainBar[i]);
+    for(size_t i = 0; i < mainBar.size(); i++){
         cout << mainBar[i].name << "\n";
         cout << mainBar[i].dateStart << " - " << mainBar[i].dateEnd << "\n";
         cout << month[mainBar[i].monthStart - 1] << " - " << month[mainBar[i].monthEnd - 1] << "\n";
-        cout << "length: " << length << " days\n";
         cout << "column: " << mainBar[i].column << "\n";
         cout << "date in 365 format: " << mainBar[i].absStart << " - " << mainBar[i].absEnd << "\n";
     }
 }
 
+// ===================== HARI & JAM SEKARANG =====================
+
+const vector<string> DayName = {"Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"};
+
+struct NowInfo{
+    string dayName;   // nama hari (Senin, Selasa, ...)
+    int date;         // tanggal 1-31
+    int month;        // bulan 1-12
+    int year;
+    int hour;         // jam 0-23
+    int minute;
+    int absDay;       // hari ke-berapa dalam 365 hari (format sama dengan absStart/absEnd)
+};
+
+NowInfo getCurrentTime(){
+    const vector<int> daylength = {0 , 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+    time_t raw = time(nullptr) + 7 * 3600;   // paksa WIB (UTC+7), server bisa pakai UTC
+    tm* lt = gmtime(&raw);
+
+    NowInfo now;
+    now.dayName = DayName[lt->tm_wday];
+    now.date    = lt->tm_mday;
+    now.month   = lt->tm_mon + 1;
+    now.year    = lt->tm_year + 1900;
+    now.hour    = lt->tm_hour;
+    now.minute  = lt->tm_min;
+
+    now.absDay = 0;
+    for(int i = 0; i < now.month; i++){
+        now.absDay += daylength[i];
+    }
+    now.absDay += now.date;
+    return now;
+}//ambil hari, tanggal, bulan, jam sekarang
+
+void showCurrentTime(){
+    NowInfo now = getCurrentTime();
+    cout << "=== sekarang ===\n";
+    cout << now.dayName << ", " << now.date << " " << Month[now.month - 1] << " " << now.year << "\n";
+    cout << "jam: " << (now.hour < 10 ? "0" : "") << now.hour << ":"
+         << (now.minute < 10 ? "0" : "") << now.minute << "\n";
+    cout << "date in 365 format: " << now.absDay << "\n";
+    cout << "================\n";
+}
+
+// ===============================================================
+
 void mainMenu(vector<Bar>& mainBar, const vector<string> &month){
     bool running = true;
     while(running){
-        cout << "what u wanna do? 1 to insert bars, 2 to display em" << endl;
+        cout << "what u wanna do? 1 to insert bars, 2 to display em, 3 to quit" << endl;
         int input;
         cin >> input;
         if (input == 1){
@@ -123,26 +155,7 @@ void mainMenu(vector<Bar>& mainBar, const vector<string> &month){
 
 int main(){
     vector<Bar> mainBar;
+    showCurrentTime();
     mainMenu(mainBar, Month);
     return 0;
 }
-
-
-//devlog: bar length done
-// next to be developed is column
-// if there are 2 or more schedules overlapping on the same
-// date or length, make a new column
-
-// next to develop too is fetching user's current date and month
-// translate them into data and process it, put the user's current
-// date and month in the table, thats it
-// if the date and month of an event exceeds its length
-// (klo event nya udah selesai kayak kemaren or etc)
-// the bar remains there until the next year's month starting to render.
-
-
-//in development reminder so i wont forget:
-// im developing the column calculator to see if 2 schedule overlap together on the
-// same date, need date converter to raw 365 day for cleaner later bool function.
-// bool checks if 2 dates or more are overlapping with each other by comparing each bar's
-// length
