@@ -67,6 +67,36 @@ void inputBar(vector<Bar>& mainBar){
 
     mainBar.push_back(userBar);
 }
+
+int simplifyInput(int b, int c) {
+    while (true) {
+        cout << "Input number between " << b << " and " << c << ": ";
+        int input;
+        cin >> input;
+        if (input >= b && input <= c) {
+            return input;
+        }
+
+        cout << "Invalid input. Try again.\n";
+    }
+}//index input simplification pipeline for prototyping, part of optimization
+
+int availableCol(vector<Bar> &mainBar, int index){
+    int candidate = 0;
+    while(true){
+        bool conflict = false;
+        for(int i=0;i<mainBar.size();i++){
+            if(i==index) continue;
+            if(mainBar[i].column == candidate && isOverlapping(mainBar[i], mainBar[index])){
+                conflict = true;
+                break;
+            }
+        }
+        if(!conflict) return candidate;
+        candidate++;
+    }
+}
+
 //testcases
 //input format sdate,ndate,smonth,nmonth
 //input: 1, 28, 10, 12
@@ -102,6 +132,65 @@ void displayBars(vector<Bar> &mainBar, const vector<string> &month){
     }
 }
 
+void barToedit(vector<Bar> &mainBar){
+    bool editing = true;
+    bool editingBar = false;
+    while(editing){
+        cout << "pick an index to edit\n";
+        int input; cin >> input;
+        if(input > 0 && input <= mainBar.size()){
+            int index = input - 1;
+            editingBar = true;
+            while(editingBar){
+                cout << "what to do with bar " << mainBar[index].name << endl;
+                cout << "1. change name, 2. change date, 3. change Month, 4. finish";
+                int choice = simplifyInput(1, 4);
+                if(choice==1){
+                    string newName;
+                    cout << "input new name for bar " << mainBar[index].name << endl;
+                    cin >> newName;
+                    mainBar[index].name = newName;
+                }else if (choice==2) {
+                    int newDatestart; int newDateend;
+                    cout << "input new date start and date end\n";
+                    cin >> newDatestart >> newDateend;
+                    mainBar[index].dateStart = newDatestart;
+                    mainBar[index].dateEnd = newDateend;
+                }else if (choice==3) {
+                    int newMonthstart; int newMonthend;
+                    cout << "input new starting and ending month\n";
+                    cin >> newMonthstart >> newMonthend;
+                    mainBar[index].monthStart = newMonthstart;
+                    mainBar[index].monthEnd = newMonthend;
+                }else if (choice==4) {
+                    int start = 0;
+                    int end = 0;
+                    calcAbsDate(mainBar[index], start, end);
+                    mainBar[index].absStart = start;
+                    mainBar[index].absEnd = end;
+                    mainBar[index].column = availableCol(mainBar, index);
+                    editingBar = false;
+                }
+            }
+        }
+    }
+}
+
+void barTodelete(vector<Bar> &mainBar){
+    bool picking = true;
+    while(picking == true){
+        cout << "pick an index to delete\n";
+        int input; cin >> input;
+        if(input > 0 && input <= mainBar.size()){
+            int index = input - 1;
+            mainBar.erase(mainBar.begin() + index);
+            cout << "bar at index " << index << " is done for.\n";
+        }else{
+            picking = false;
+        }
+    }
+}
+
 void mainMenu(vector<Bar>& mainBar, const vector<string> &month){
     bool running = true;
     while(running){
@@ -113,10 +202,9 @@ void mainMenu(vector<Bar>& mainBar, const vector<string> &month){
         }else if(input == 2){
             displayBars(mainBar, month);
         }else if(input == 3){
-            cout << "quitting" << endl;
+            barTodelete(mainBar);
+        }else if(input == 4){
             running = false;
-        }else{
-            cout << "invalid input\n";
         }
     }
 }//current interface for prototyping
@@ -128,21 +216,9 @@ int main(){
 }
 
 
-//devlog: bar length done
-// next to be developed is column
-// if there are 2 or more schedules overlapping on the same
-// date or length, make a new column
+//devlog: deleting and editing bar is now able to be done
+// code optimization would be done when everything is ready
+// to be rendered to raylib
 
-// next to develop too is fetching user's current date and month
-// translate them into data and process it, put the user's current
-// date and month in the table, thats it
-// if the date and month of an event exceeds its length
-// (klo event nya udah selesai kayak kemaren or etc)
-// the bar remains there until the next year's month starting to render.
-
-
-//in development reminder so i wont forget:
-// im developing the column calculator to see if 2 schedule overlap together on the
-// same date, need date converter to raw 365 day for cleaner later bool function.
-// bool checks if 2 dates or more are overlapping with each other by comparing each bar's
-// length
+//to develop next so i wont forgor:
+//the per hour schedule implementation
