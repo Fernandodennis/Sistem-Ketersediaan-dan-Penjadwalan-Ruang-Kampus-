@@ -204,7 +204,7 @@ void mainMenu(vector<Bar>& mainBar, const vector<string> &month){
         }else if(input == 3){
             barTodelete(mainBar);
         }else if(input == 4){
-            running = false;
+            barToedit(mainBar);
         }
     }
 }//current interface for prototyping
