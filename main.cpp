@@ -209,16 +209,13 @@ void mainMenu(vector<Bar>& mainBar, const vector<string> &month){
     }
 }//current interface for prototyping
 
-int main(){
-    vector<Bar> mainBar;
-    mainMenu(mainBar, Month);
-    return 0;
-}
+//int main(){
+    //vector<Bar> mainBar;
+    //mainMenu(mainBar, Month);
+    //return 0;
+//}
 
 
-//devlog: deleting and editing bar is now able to be done
-// code optimization would be done when everything is ready
-// to be rendered to raylib
-
-//to develop next so i wont forgor:
-//the per hour schedule implementation
+//devlog for mainR.cpp so i would mind it:
+// apply DRY to code for optimization
+// reorganize the system to be tidier
